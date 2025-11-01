@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+    <title>The Great RGB Guessing Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+    /* ------------------------------------- */
+    /* ---------- CSS: FINAL OPTIMIZED VERSION ---------- */
+    /* ------------------------------------- */
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+        font-family: 'Montserrat', sans-serif;
+        color: #fff;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-bottom: 20px;
+    }
+
+    /* --- Header (Glassmorphism Effect) --- */
+    #header {
+        margin-top: 20px;
+        padding: 15px 25px;
+        text-align: center;
+        text-transform: uppercase;
+        font-weight: 700;
+        font-size: 1.8rem;
+        color: #fff;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        transition: background-color 0.6s ease, box-shadow 0.6s ease;
+    }
+
+    #color-display {
+        font-size: 2rem;
+        color: #00e5ff;
+        text-shadow: 0 0 8px rgba(0, 229, 255, 0.8);
+        font-weight: 800;
+        letter-spacing: 3px;
+    }
+
+    /* --- Options Bar (Control Panel) --- */
+    #options {
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+        backdrop-filter: blur(8px);
+        padding: 8px 15px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    button {
+        border: none;
+        padding: 6px 14px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #00e5ff;
+        background: transparent;
+        border: 2px solid transparent;
+        border-radius: 6px;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        font-size: 0.8rem;
+    }
+
+    button:hover {
+        color: #fff;
+        background-color: rgba(0, 229, 255, 0.1);
+        border-color: #00e5ff;
+    }
+
+    .selected {
+        background-color: #00e5ff;
+        color: #0f2027;
+        font-weight: 700;
+        box-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
+    }
+
+    /* --- Message Display --- */
+    #message {
+        padding-top: 15px;
+        font-weight: 600;
+        color: #00ffcc;
+        text-shadow: 0 0 6px #00ffcc;
+        min-width: 80px;
+        text-align: center;
+        font-size: 3rem;
+    }
+    
+    #chances-display {
+        color: #ff5757; /* Red accent for chances */
+        font-size: 1.2rem;
+        font-weight: 700;
+        text-shadow: 0 0 5px rgba(255, 87, 87, 0.5);
+        margin-left: 15px;
+    }
+
+
+    /* --- Squares Container --- */
+    #container {
+        margin-top: 30px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+        max-width: 550px;
+        width: 90%;
+        padding: 0;
+    }
+
+    .square {
+        flex: 1 1 28%;
+        max-width: 28%;
+        aspect-ratio: 1 / 1;
+        background: #555;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+        transform: scale(1);
+    }
+
+    .square:hover {
+        transform: scale(1.03);
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.1), 0 5px 20px rgba(0, 0, 0, 0.6);
+    }
+    
+    .square[style*="background-color: transparent"] {
+        opacity: 0;
+        transform: scale(0.8);
+        box-shadow: none;
+    }
+
+    /* Winning State Animation for squares */
+    .square.win {
+        animation: pulse-win 1.5s infinite alternate;
+    }
+
+    @keyframes pulse-win {
+        from { transform: scale(1); box-shadow: 0 0 5px currentColor; opacity: 0.9; }
+        to { transform: scale(1.05); box-shadow: 0 0 5px currentColor, 0 0 15px currentColor; opacity: 1; }
+    }
+
+    /* --- Responsive Design --- */
+    @media (max-width: 550px) {
+        .square {
+            flex: 1 1 45%;
+            max-width: 45%;
+        }
+        #header {
+            font-size: 1.4rem;
+        }
+        #color-display {
+            font-size: 1.6rem;
+        }
+        #options {
+            flex-wrap: wrap;
+        }
+    }
+</style>
+</head>
+<body>
+
+    <h1 id="header">
+        The Great <br>
+        <span id="color-display">RGB</span> <br>
+        Guessing Game
+    </h1>
+
+    <div id="options">
+        <button id="reset-button">New Colors</button>
+        <span id="chances-display">Chances: 3</span>
+        <button class="mode-button" data-mode="3" data-chances="1">Easy (1 Chance)</button>
+        <button class="mode-button selected" data-mode="6" data-chances="3">Hard (3 Chances)</button>
+    </div>
+
+    <div id="container">
+        <div class="square"></div>
+        <div class="square"></div>
+        <div class="square"></div>
+        <div class="square"></div>
+        <div class="square"></div>
+        <div class="square"></div>
+    </div>
+
+    <div>
+        <span id="message"></span>
+    </div>
+    
+
+    <script>
+        // -------------------------------------
+        // ---------- JAVASCRIPT: CLEAN & MODERN (with Chances) ----------
+        // -------------------------------------
+
+        // --- Game State ---
+        let numSquares = 6;
+        let colors = [];
+        let pickedColor;
+        // NEW: Track remaining chances
+        let remainingChances = 3; 
+
+        // --- Selectors ---
+        const squares = document.querySelectorAll(".square");
+        const colorDisplay = document.querySelector("#color-display");
+        const messageDisplay = document.querySelector("#message");
+        const header = document.querySelector("#header");
+        const resetButton = document.querySelector("#reset-button");
+        const modeButtons = document.querySelectorAll(".mode-button");
+        // NEW: Chances display selector
+        const chancesDisplay = document.querySelector("#chances-display"); 
+
+        // --- Initialize Game ---
+        function init() {
+            setupModeListeners();
+            setupSquareListeners();
+            resetGame();
+        }
+
+        function setupModeListeners() {
+            modeButtons.forEach(button => {
+                button.addEventListener("click", function() {
+                    modeButtons.forEach(btn => btn.classList.remove("selected"));
+                    this.classList.add("selected");
+                    
+                    // Update state variables based on data attributes
+                    numSquares = parseInt(this.dataset.mode);
+                    // NEW: Set initial chances based on the mode
+                    remainingChances = parseInt(this.dataset.chances); 
+                    
+                    resetGame();
+                });
+            });
+        }
+
+        function setupSquareListeners() {
+            squares.forEach(square => {
+                square.addEventListener("click", function() {
+                    const clickedColor = this.style.backgroundColor;
+                    
+                    if (clickedColor === pickedColor) {
+                        // WIN Condition
+                        messageDisplay.textContent = "Correct! Nice Job!";
+                        resetButton.textContent = "Play Again?";
+                        changeColors(pickedColor);
+                        // Disable further clicks
+                        squares.forEach(s => s.style.pointerEvents = 'none'); 
+                    } else {
+                        // LOSS OF CHANCE Condition
+                        if (remainingChances > 0) {
+                            remainingChances--;
+                            chancesDisplay.textContent = `Chances: ${remainingChances}`;
+                            
+                            this.style.backgroundColor = "transparent";
+                            messageDisplay.textContent = "Try Again!";
+                        }
+                        
+                        // GAME OVER Condition
+                        if (remainingChances === 0) {
+                            messageDisplay.textContent = "Game Over!";
+                            resetButton.textContent = "Play Again?";
+                            // Show the correct color on the header
+                            header.style.backgroundColor = pickedColor; 
+                            // Reveal the correct square
+                            squares.forEach(s => {
+                                if (s.style.backgroundColor !== "transparent") {
+                                    s.style.backgroundColor = pickedColor;
+                                    s.style.opacity = 1;
+                                }
+                                // Disable further clicks
+                                s.style.pointerEvents = 'none';
+                            });
+                        }
+                    }
+                });
+            });
+        }
+
+        resetButton.addEventListener("click", resetGame);
+
+        // --- Core Game Logic ---
+        function resetGame() {
+            colors = generateRandomColors(numSquares);
+            pickedColor = chooseColor();
+            
+            // Set initial chances based on the currently selected mode
+            const selectedMode = document.querySelector(".mode-button.selected");
+            remainingChances = parseInt(selectedMode.dataset.chances);
+            
+            // Update UI elements
+            colorDisplay.textContent = pickedColor.toUpperCase();
+            header.style.backgroundColor = "rgba(255, 255, 255, 0.05)"; 
+            header.style.boxShadow = "0 5px 15px rgba(0, 0, 0, 0.5)";
+            resetButton.textContent = "New Colors";
+            messageDisplay.textContent = "";
+            chancesDisplay.textContent = `Chances: ${remainingChances}`; // Update chances display
+
+            // Update square colors and visibility
+            squares.forEach((square, i) => {
+                square.classList.remove("win");
+                square.style.pointerEvents = 'auto'; // Enable clicks
+                if (colors[i]) {
+                    square.style.display = "block";
+                    square.style.backgroundColor = colors[i];
+                    square.style.opacity = "1"; 
+                    square.style.transform = "scale(1)"; 
+                    square.style.boxShadow = "0 5px 15px rgba(0, 0, 0, 0.4)";
+                } else {
+                    square.style.display = "none";
+                }
+            });
+        }
+
+        function changeColors(color) {
+            squares.forEach(square => {
+                square.style.backgroundColor = color;
+                square.style.opacity = "1";
+                square.classList.add("win");
+            });
+            
+            header.style.backgroundColor = color;
+            header.style.boxShadow = `0 0 15px ${color}, 0 0 25px ${color}`; 
+        }
+
+        // --- Utility Functions ---
+        function chooseColor() {
+            const random = Math.floor(Math.random() * colors.length);
+            return colors[random];
+        }
+
+        function generateRandomColors(num) {
+            const arr = [];
+            for (let i = 0; i < num; i++) {
+                arr.push(randomColor());
+            }
+            return arr;
+        }
+
+        function randomColor() {
+            const r = Math.floor(Math.random() * 256);
+            const g = Math.floor(Math.random() * 256);
+            const b = Math.floor(Math.random() * 256);
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+
+        // Start the game
+        init();
+    </script>
+</body>
+</html>
